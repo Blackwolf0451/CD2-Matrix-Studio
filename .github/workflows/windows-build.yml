@@ -1,0 +1,66 @@
+name: Windows build
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      - name: Validate release metadata
+        shell: pwsh
+        run: python tools/check_release.py
+
+      - name: Run tests
+        shell: pwsh
+        env:
+          PYTHONPATH: src
+        run: pytest -q
+
+      - name: Build portable EXE
+        shell: pwsh
+        run: |
+          pyinstaller --noconfirm --clean --onefile --windowed `
+            --name CD2-Matrix-Studio `
+            --icon assets/app.ico `
+            --paths src `
+            --add-data "assets;assets" `
+            --add-data "docs;docs" `
+            --hidden-import hid `
+            main.py
+
+      - name: Install Inno Setup
+        shell: pwsh
+        run: choco install innosetup -y --no-progress
+
+      - name: Build installer
+        shell: pwsh
+        run: |
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer\cd2_matrix_studio.iss
+
+      - name: Upload portable build
+        uses: actions/upload-artifact@v4
+        with:
+          name: CD2-Matrix-Studio-portable
+          path: dist/CD2-Matrix-Studio.exe
+
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: CD2-Matrix-Studio-installer
+          path: release/CD2-Matrix-Studio-Setup.exe
