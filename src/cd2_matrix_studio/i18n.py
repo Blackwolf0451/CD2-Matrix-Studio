@@ -8,7 +8,6 @@ STRINGS = {
 
         "draw": "Draw",
         "erase": "Erase",
-        "eyedropper": "Eyedropper",
         "fill": "Fill",
         "clear": "Clear frame",
         "mirror": "Mirror",
@@ -99,7 +98,6 @@ STRINGS = {
 
         "draw": "Рисование",
         "erase": "Ластик",
-        "eyedropper": "Пипетка",
         "fill": "Заливка",
         "clear": "Очистить кадр",
         "mirror": "Симметрия",

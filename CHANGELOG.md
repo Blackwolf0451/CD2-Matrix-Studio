@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.1
+
+- Removed the redundant matrix Eyedropper tool from the drawing toolbar
+- Color picking remains available through the color selection dialog
+
 ## 1.0.0
 
 - First public release

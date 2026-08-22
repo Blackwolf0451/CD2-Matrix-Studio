@@ -22,7 +22,6 @@ Use the tool panel on the left:
 
 - **Draw** — paint LEDs with the selected color;
 - **Erase** — turn LEDs off;
-- **Eyedropper** — pick the color of an existing LED;
 - **Fill** — fill the whole frame with the selected color;
 - **Clear frame** — turn every LED in the current frame off;
 - **Mirror** — paint the matching LED on the opposite side of the same row.

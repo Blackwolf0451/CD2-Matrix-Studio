@@ -11,7 +11,7 @@ CD2 Matrix Studio is a Windows desktop application for drawing directly on the d
 - Direct editing of all **162 RGB LEDs**
 - Static images and multi-frame animations
 - **10 ms / 40 ms** animation timing supported by the dock
-- Draw, erase, fill, eyedropper, clear
+- Draw, erase, fill and clear
 - Horizontal mirror mode
 - Undo / redo
 - Recent colors remembered between launches

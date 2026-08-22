@@ -12,7 +12,6 @@ OFF: RGB = (0, 0, 0)
 
 class MatrixWidget(QWidget):
     changed = Signal()
-    colorPicked = Signal(tuple)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -120,10 +119,6 @@ class MatrixWidget(QWidget):
         index = self._closest_index(pos)
         if index is None:
             return False
-
-        if self.tool == "pick" and button == Qt.MouseButton.LeftButton:
-            self.colorPicked.emit(tuple(self.colors[index]))
-            return True
 
         if button == Qt.MouseButton.RightButton or self.tool == "erase":
             color = OFF

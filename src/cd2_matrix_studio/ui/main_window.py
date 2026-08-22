@@ -171,9 +171,6 @@ class MainWindow(QMainWindow):
         self.erase_button = QPushButton()
         self.erase_button.setCheckable(True)
 
-        self.pick_button = QPushButton()
-        self.pick_button.setCheckable(True)
-
         self.fill_button = QPushButton()
         self.fill_button.setCheckable(True)
 
@@ -181,7 +178,6 @@ class MainWindow(QMainWindow):
 
         left_l.addWidget(self.draw_button)
         left_l.addWidget(self.erase_button)
-        left_l.addWidget(self.pick_button)
         left_l.addWidget(self.fill_button)
         left_l.addWidget(self.clear_button)
 
@@ -384,13 +380,11 @@ class MainWindow(QMainWindow):
         self.color_button.clicked.connect(self.choose_color)
         self.draw_button.clicked.connect(lambda: self.set_tool("draw"))
         self.erase_button.clicked.connect(lambda: self.set_tool("erase"))
-        self.pick_button.clicked.connect(lambda: self.set_tool("pick"))
         self.fill_button.clicked.connect(lambda: self.set_tool("fill"))
         self.clear_button.clicked.connect(self.clear_frame)
         self.mirror_switch.toggled.connect(self.matrix.set_mirror)
 
         self.matrix.changed.connect(self._matrix_changed)
-        self.matrix.colorPicked.connect(self._color_picked)
 
         self.frame_list.currentRowChanged.connect(self.select_frame)
         self.frame_list.orderChanged.connect(self.frames_reordered)
@@ -470,7 +464,6 @@ class MainWindow(QMainWindow):
         self.recent_label.setText(tr("recent_colors"))
         self.draw_button.setText(tr("draw"))
         self.erase_button.setText(tr("erase"))
-        self.pick_button.setText(tr("eyedropper"))
         self.fill_button.setText(tr("fill"))
         self.clear_button.setText(tr("clear"))
         self.mirror_label.setText(tr("mirror"))
@@ -603,10 +596,6 @@ class MainWindow(QMainWindow):
                 remember=True,
             )
 
-    def _color_picked(self, color):
-        self.set_current_color(color, remember=True)
-        self.set_tool("draw")
-
     def _update_color_button(self):
         r, g, b = self.current_color
         lum = r * 0.299 + g * 0.587 + b * 0.114
@@ -620,7 +609,6 @@ class MainWindow(QMainWindow):
         self.matrix.set_tool(tool)
         self.draw_button.setChecked(tool == "draw")
         self.erase_button.setChecked(tool == "erase")
-        self.pick_button.setChecked(tool == "pick")
         self.fill_button.setChecked(tool == "fill")
 
     def _snapshot(self):
