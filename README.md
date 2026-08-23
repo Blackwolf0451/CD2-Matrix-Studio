@@ -107,7 +107,6 @@ GitHub Actions workflows are included for CI, Windows builds and tagged releases
 - [Русская инструкция](docs/USER_GUIDE_RU.md)
 - [Protocol notes](docs/PROTOCOL.md)
 - [Building](docs/BUILDING.md)
-- [GitHub publishing guide — RU](docs/PUBLISHING_RU.md)
 
 ## Troubleshooting
 
