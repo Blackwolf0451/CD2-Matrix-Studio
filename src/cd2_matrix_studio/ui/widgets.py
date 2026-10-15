@@ -50,8 +50,9 @@ class LanguageSwitch(QWidget):
 
         self.en = QLabel("EN")
         self.ru = QLabel("RU")
+        self.cn = QLabel("CN")
 
-        for label in (self.en, self.ru):
+        for label in (self.en, self.ru, self.cn,):
             label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             label.setFixedSize(36, 26)
             label.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -59,6 +60,7 @@ class LanguageSwitch(QWidget):
 
         layout.addWidget(self.en)
         layout.addWidget(self.ru)
+        layout.addWidget(self.cn)
         self._refresh()
 
     def eventFilter(self, obj, event):
@@ -69,10 +71,13 @@ class LanguageSwitch(QWidget):
             if obj is self.ru:
                 self.set_language("ru", emit=True)
                 return True
+            if obj is self.cn:
+                self.set_language("cn", emit=True)
+                return True
         return super().eventFilter(obj, event)
 
     def set_language(self, language: str, emit=False):
-        if language not in ("en", "ru"):
+        if language not in ("en", "ru", "cn"):
             language = "en"
         self.language = language
         self._refresh()
@@ -94,6 +99,7 @@ class LanguageSwitch(QWidget):
         """
         self.en.setStyleSheet(active if self.language == "en" else inactive)
         self.ru.setStyleSheet(active if self.language == "ru" else inactive)
+        self.cn.setStyleSheet(active if self.language == "cn" else inactive)
 
 
 class HintRow(QWidget):

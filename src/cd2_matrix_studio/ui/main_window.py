@@ -64,7 +64,12 @@ class MainWindow(QMainWindow):
                 sys_lang = (locale.getlocale()[0] or "").lower()
             except Exception:
                 sys_lang = ""
-            saved_lang = "ru" if sys_lang.startswith("ru") else "en"
+            if sys_lang.startswith("zh"):
+                saved_lang = "zh"
+            elif sys_lang.startswith("ru"):
+                saved_lang = "ru"
+            else:
+                saved_lang = "en"
 
         self.tx = Translator(saved_lang)
         self.qt_translator = None

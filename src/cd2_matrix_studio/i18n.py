@@ -180,6 +180,95 @@ STRINGS = {
         "hint_redo_key": "Ctrl+Y",
         "hint_redo_text": "Повтор",
     },
+    "zh": {
+        "app_name": "CD2 Matrix Studio",
+        "connected": "设备已连接",
+        "disconnected": "未找到设备",
+
+        "draw": "绘制",
+        "erase": "擦除",
+        "fill": "填充",
+        "clear": "清空画布",
+        "mirror": "镜像",
+        "color": "颜色",
+        "recent_colors": "最近使用",
+
+        "frames": "帧",
+        "new_frame": "新增",
+        "duplicate": "复制",
+        "delete": "删除",
+        "move_up": "上移",
+        "move_down": "下移",
+        "drag_frames_hint": "拖动帧以重新排序",
+        "copy_frame": "复制帧",
+        "paste_frame": "粘贴帧",
+
+        "animation": "动画",
+        "animation_preview": "预览动画",
+        "stop_preview": "停止",
+        "animation_speed": "动画速度",
+        "speed_10_tooltip": "每帧 10 毫秒 — 更快",
+        "speed_40_tooltip": "每帧 40 毫秒 — 更慢",
+
+        "send": "发送到设备",
+        "sending": "发送中…",
+        "sent": "发送成功",
+
+        "file": "文件",
+        "new_project": "新建项目",
+        "open": "打开…",
+        "save": "保存",
+        "save_as": "另存为…",
+        "exit": "退出",
+
+        "edit": "编辑",
+        "undo": "撤销",
+        "redo": "重做",
+
+        "help": "帮助",
+        "user_guide": "用户指南",
+        "about": "关于",
+        "close": "关闭",
+        "yes": "是",
+        "no": "否",
+        "ok": "确定",
+        "cancel": "取消",
+        
+        "project_files": "CD2 Matrix Studio 项目 (*.cd2proj *.json)",
+        "save_project": "保存项目",
+        "open_project": "打开项目",
+        "confirm_new": "放弃当前项目并新建？",
+        "confirm_delete_frame": "删除此帧？",
+        "last_frame": "至少需要保留一帧。",
+        "frame": "帧",
+        "leds": "LED",
+
+        "send_question_single": "将此帧发送到设备？",
+        "send_question_multi": "以 {interval} 毫秒的间隔发送 {frames} 帧到设备？",
+        "send_question_few": "以 {interval} 毫秒的间隔发送 {frames} 帧到设备？",
+        "send_question_many": "以 {interval} 毫秒的间隔发送 {frames} 帧到设备？",
+        "close_space_station": "如果 Flydigi Space Station 已打开，请在发送前关闭它。",
+        "device_busy": "无法打开设备。请关闭 Flydigi Space Station 后重试。",
+        "send_error": "无法发送到设备",
+        "open_error": "无法打开项目",
+        "save_error": "无法保存项目",
+        "guide_missing": "无法加载内置指南。",
+
+        "about_text": (
+            "非官方社区版 Flydigi Charging Dock 2 Pro LED 矩阵编辑器。\n\n"
+            "与 Flydigi 无附属或认可关系。"
+        ),
+
+        "quick_actions": "快捷键",
+        "hint_lmb_key": "左键",
+        "hint_lmb_text": "绘制",
+        "hint_rmb_key": "右键",
+        "hint_rmb_text": "擦除",
+        "hint_undo_key": "Ctrl+Z",
+        "hint_undo_text": "撤销",
+        "hint_redo_key": "Ctrl+Y",
+        "hint_redo_text": "重做",
+    },
 }
 
 
