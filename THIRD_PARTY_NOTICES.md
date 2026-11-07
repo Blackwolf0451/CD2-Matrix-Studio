@@ -2,6 +2,7 @@
 
 CD2 Matrix Studio depends on third-party software, including:
 
+- **Pillow**, GIF decoding and image processing
 - **PySide6 / Qt for Python**
 - **hidapi**
 - **PyInstaller** for release packaging

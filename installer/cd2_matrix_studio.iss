@@ -1,5 +1,5 @@
 #define MyAppName "CD2 Matrix Studio"
-#define MyAppVersion "1.0.1"
+#define MyAppVersion "1.1.0"
 #define MyAppPublisher "CD2 Matrix Studio Community"
 #define MyAppExeName "CD2-Matrix-Studio.exe"
 

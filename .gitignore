@@ -9,3 +9,4 @@ release/
 .pytest_cache/
 .idea/
 .vscode/
+.cd2-update-backups/

@@ -17,7 +17,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install test dependency
-        run: python -m pip install pytest
+        run: python -m pip install pytest 'Pillow>=10.0,<13'
 
       - name: Check synchronized release version
         run: python tools/check_release.py

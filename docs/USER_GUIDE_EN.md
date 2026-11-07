@@ -85,3 +85,10 @@ The selected language is remembered automatically.
 ## 10. Safety
 
 The application sends the same style of HID data used for LED frame uploads. It does not intentionally flash or replace dock firmware.
+
+
+## GIF import and frame duration (v1.1)
+
+Set **Frame duration** for the selected frame. The preview respects that duration. The dock supports only 10/40 ms base intervals, so the application repeats frames automatically during transfer (max. 200 device frames).
+
+Select **Import GIF…**, adjust Fill/Fit, zoom, X/Y offset and clip length. The crop preview uses the dock's real 162 LED layout. The GIF replaces the current project after confirmation.

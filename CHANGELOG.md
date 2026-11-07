@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.0
+
+- Per-frame duration (device frames expanded at 10 or 40 ms)
+- Geometry-accurate GIF import with crop preview, zoom and pan
+- GIF frame timing preserved as closely as device timing allows
+
 ## 1.0.1
 
 - Removed the redundant matrix Eyedropper tool from the drawing toolbar

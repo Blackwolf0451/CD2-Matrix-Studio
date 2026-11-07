@@ -17,6 +17,8 @@ from PySide6.QtWidgets import (
     QMainWindow,
     QMessageBox,
     QPushButton,
+    QSpinBox,
+    QDialog,
     QVBoxLayout,
     QWidget,
 )
@@ -24,7 +26,8 @@ from PySide6.QtWidgets import (
 from .. import __version__
 from ..i18n import Translator
 from ..project import Project, SUPPORTED_FRAME_INTERVALS_MS, blank_frame
-from ..protocol import ROWS, is_device_connected, send_frames
+from ..protocol import MAX_FRAMES, ROWS, is_device_connected, send_frames
+from ..timing import ticks_for_duration
 from .matrix_widget import MatrixWidget
 from .widgets import ConfirmDialog, GuideDialog, HintRow, LanguageSwitch, ReorderListWidget, ToggleSwitch
 
@@ -73,6 +76,7 @@ class MainWindow(QMainWindow):
         self.current_frame = 0
         self.current_color = (255, 255, 255)
         self.frame_clipboard = None
+        self.frame_clipboard_duration_ms = None
 
         self.undo_stack = []
         self.redo_stack = []
@@ -268,6 +272,25 @@ class MainWindow(QMainWindow):
         row2.addWidget(self.move_frame_down_button)
         right_l.addLayout(row2)
 
+        duration_row = QHBoxLayout()
+        self.duration_label = QLabel()
+        self.duration_label.setObjectName("MutedSmall")
+        self.duration_spin = QSpinBox()
+        self.duration_spin.setRange(10, 60000)
+        self.duration_spin.setSingleStep(10)
+        self.duration_spin.setSuffix(" ms")
+        self.duration_spin.setFixedWidth(115)
+        duration_row.addWidget(self.duration_label)
+        duration_row.addStretch(1)
+        duration_row.addWidget(self.duration_spin)
+        right_l.addLayout(duration_row)
+
+        self.frame_budget_label = QLabel()
+        self.frame_budget_label.setObjectName("MutedSmall")
+        right_l.addWidget(self.frame_budget_label)
+        self.import_gif_button = QPushButton()
+        right_l.addWidget(self.import_gif_button)
+
         self.delete_frame_button = QPushButton()
         right_l.addWidget(self.delete_frame_button)
         body.addWidget(right)
@@ -388,6 +411,8 @@ class MainWindow(QMainWindow):
 
         self.frame_list.currentRowChanged.connect(self.select_frame)
         self.frame_list.orderChanged.connect(self.frames_reordered)
+        self.duration_spin.valueChanged.connect(self.set_frame_duration)
+        self.import_gif_button.clicked.connect(self.import_gif)
 
         self.add_frame_button.clicked.connect(self.add_frame)
         self.duplicate_frame_button.clicked.connect(self.duplicate_frame)
@@ -475,6 +500,8 @@ class MainWindow(QMainWindow):
         self.hint_redo.set_text(tr("hint_redo_key"), tr("hint_redo_text"))
 
         self.frames_label.setText(tr("frames"))
+        self.duration_label.setText(tr("frame_duration"))
+        self.import_gif_button.setText(tr("import_gif"))
         self.drag_hint.setToolTip(tr("drag_frames_hint"))
         self.add_frame_button.setText(tr("new_frame"))
         self.duplicate_frame_button.setText(tr("duplicate"))
@@ -655,6 +682,7 @@ class MainWindow(QMainWindow):
         self.undo_stack.clear()
         self.redo_stack.clear()
         self.matrix.set_frame(self.project.frames[row])
+        self._sync_duration_spin()
 
     # ---------- frame list ----------
     def add_frame(self):
@@ -662,6 +690,7 @@ class MainWindow(QMainWindow):
             return
 
         self.project.frames.insert(self.current_frame + 1, blank_frame())
+        self.project.frame_durations_ms.insert(self.current_frame + 1, self.project.frame_interval_ms)
         self.current_frame += 1
         self.refresh_frame_list()
         self.frame_list.setCurrentRow(self.current_frame)
@@ -674,12 +703,16 @@ class MainWindow(QMainWindow):
             self.current_frame + 1,
             self.project.frames[self.current_frame].copy(),
         )
+        self.project.frame_durations_ms.insert(
+            self.current_frame + 1, self.project.frame_durations_ms[self.current_frame]
+        )
         self.current_frame += 1
         self.refresh_frame_list()
         self.frame_list.setCurrentRow(self.current_frame)
 
     def copy_frame(self):
         self.frame_clipboard = self.project.frames[self.current_frame].copy()
+        self.frame_clipboard_duration_ms = self.project.frame_durations_ms[self.current_frame]
 
     def paste_frame(self):
         if self.frame_clipboard is None or len(self.project.frames) >= 200:
@@ -688,6 +721,9 @@ class MainWindow(QMainWindow):
         self.project.frames.insert(
             self.current_frame + 1,
             self.frame_clipboard.copy(),
+        )
+        self.project.frame_durations_ms.insert(
+            self.current_frame + 1, self.frame_clipboard_duration_ms or self.project.frame_interval_ms
         )
         self.current_frame += 1
         self.refresh_frame_list()
@@ -709,6 +745,7 @@ class MainWindow(QMainWindow):
             return
 
         del self.project.frames[self.current_frame]
+        del self.project.frame_durations_ms[self.current_frame]
         self.current_frame = min(self.current_frame, len(self.project.frames) - 1)
 
         self.refresh_frame_list()
@@ -721,6 +758,8 @@ class MainWindow(QMainWindow):
 
         frame = self.project.frames.pop(self.current_frame)
         self.project.frames.insert(target, frame)
+        duration = self.project.frame_durations_ms.pop(self.current_frame)
+        self.project.frame_durations_ms.insert(target, duration)
         self.current_frame = target
 
         self.refresh_frame_list()
@@ -739,6 +778,8 @@ class MainWindow(QMainWindow):
             return
 
         self.project.frames = [frame.copy() for frame in new_frames]
+        old_durations = self.project.frame_durations_ms
+        self.project.frame_durations_ms = [old_durations[int(i)] for i in order]
         self.current_frame = self.frame_list.currentRow()
         self.refresh_frame_list()
         self.frame_list.setCurrentRow(self.current_frame)
@@ -794,7 +835,8 @@ class MainWindow(QMainWindow):
 
             item = QListWidgetItem(
                 self._frame_icon(frame),
-                f"{self.tx.tr('frame')} {i + 1:02d}\n{lit} {self.tx.tr('leds')}",
+                f"{self.tx.tr('frame')} {i + 1:02d} — {self.project.frame_durations_ms[i]} ms\n"
+                f"{lit} {self.tx.tr('leds')}",
             )
             item.setData(Qt.ItemDataRole.UserRole, i)
             self.frame_list.addItem(item)
@@ -806,6 +848,42 @@ class MainWindow(QMainWindow):
         )
         self.frame_list.setCurrentRow(row)
         self.frame_list.blockSignals(False)
+        self._sync_duration_spin()
+        self._update_frame_budget()
+
+    # ---------- per-frame timing ----------
+    def _sync_duration_spin(self):
+        if not hasattr(self, "duration_spin"):
+            return
+        index = min(self.current_frame, len(self.project.frame_durations_ms) - 1)
+        self.duration_spin.blockSignals(True)
+        self.duration_spin.setValue(self.project.frame_durations_ms[index])
+        self.duration_spin.blockSignals(False)
+
+    def set_frame_duration(self, value):
+        if self._previewing:
+            self._sync_duration_spin()
+            return
+        self.project.frame_durations_ms[self.current_frame] = int(value)
+        self.refresh_frame_list(keep_selection=True)
+
+    def _effective_preview_ms(self):
+        return ticks_for_duration(
+            self.project.frame_durations_ms[self.current_frame],
+            self.project.frame_interval_ms,
+        ) * self.project.frame_interval_ms
+
+    def _update_frame_budget(self):
+        try:
+            count = self.project.device_frame_count()
+        except ValueError:
+            count = MAX_FRAMES + 1
+        self.frame_budget_label.setText(
+            self.tx.tr("device_frames", count=count, limit=MAX_FRAMES)
+        )
+        self.frame_budget_label.setStyleSheet(
+            "color: #ed8e8e;" if count > MAX_FRAMES else "color: #9aa3b1;"
+        )
 
     # ---------- animation timing ----------
     def set_frame_interval(self, interval_ms):
@@ -813,11 +891,15 @@ class MainWindow(QMainWindow):
         if interval_ms not in SUPPORTED_FRAME_INTERVALS_MS:
             return
 
+        old_ms = self.project.frame_interval_ms
+        if all(d == old_ms for d in self.project.frame_durations_ms):
+            self.project.frame_durations_ms = [interval_ms] * len(self.project.frames)
         self.project.frame_interval_ms = interval_ms
         self._sync_speed_buttons()
 
         if self._previewing:
-            self.preview_timer.setInterval(interval_ms)
+            self.preview_timer.setInterval(self._effective_preview_ms())
+        self.refresh_frame_list(keep_selection=True)
 
     def _sync_speed_buttons(self):
         self.speed_10_button.setChecked(self.project.frame_interval_ms == 10)
@@ -834,7 +916,7 @@ class MainWindow(QMainWindow):
             return
 
         self._previewing = True
-        self.preview_timer.setInterval(self.project.frame_interval_ms)
+        self.preview_timer.setInterval(self._effective_preview_ms())
         self.preview_timer.start()
         self.preview_button.setText(self.tx.tr("stop_preview"))
 
@@ -846,6 +928,40 @@ class MainWindow(QMainWindow):
         self.frame_list.blockSignals(False)
 
         self.matrix.set_frame(self.project.frames[self.current_frame])
+        self.preview_timer.setInterval(self._effective_preview_ms())
+
+    # ---------- GIF import ----------
+    def import_gif(self):
+        if self._previewing:
+            self.toggle_preview()
+        path, _ = QFileDialog.getOpenFileName(
+            self, self.tx.tr("import_gif"), "", "GIF (*.gif)"
+        )
+        if not path:
+            return
+        try:
+            from .gif_dialog import GifImportDialog
+            dialog = GifImportDialog(path, self.tx.language, self.project.frame_interval_ms, self)
+        except Exception as exc:
+            QMessageBox.critical(self, self.tx.tr("import_gif"), str(exc))
+            return
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        if (len(self.project.frames) > 1 or
+                any(rgb != OFF for rgb in self.project.frames[0])):
+            if not self._confirm(
+                self.tx.tr("import_gif"), self.tx.tr("gif_replace_confirm")
+            ):
+                return
+        try:
+            self.project = Project(
+                frames=dialog.result_frames,
+                frame_interval_ms=self.project.frame_interval_ms,
+                frame_durations_ms=dialog.result_durations,
+            )
+            self._apply_project()
+        except Exception as exc:
+            QMessageBox.critical(self, self.tx.tr("import_gif"), str(exc))
 
     # ---------- project ----------
     def _apply_project(self):
@@ -949,6 +1065,12 @@ class MainWindow(QMainWindow):
             self._refresh_device_status()
             return
 
+        try:
+            device_frames = self.project.to_device_frames()
+        except ValueError as exc:
+            QMessageBox.warning(self, self.tx.tr('send_error'),
+                                self.tx.tr('device_frames_error') + '\n' + str(exc))
+            return
         frame_count = len(self.project.frames)
 
         if frame_count == 1:
@@ -973,6 +1095,8 @@ class MainWindow(QMainWindow):
                 interval=self.project.frame_interval_ms,
             )
 
+        if len(device_frames) != frame_count:
+            question += '\n' + self.tx.tr('expanded_frames_note', count=len(device_frames))
         text = question + "\n\n" + self.tx.tr("close_space_station")
 
         if not self._confirm(
@@ -987,7 +1111,7 @@ class MainWindow(QMainWindow):
 
         thread = QThread(self)
         worker = SendWorker(
-            [frame.copy() for frame in self.project.frames],
+            device_frames,
             self.project.device_speed_code,
         )
         worker.moveToThread(thread)
